@@ -1,6 +1,7 @@
 
 #include "bitree.h"
-
+#include "LinkStack.h"
+#include "SqQueue.h"
 /*
 	Create_Tree:根据用户输入创建一棵二叉排序树
 	返回值：
@@ -151,19 +152,19 @@ void last_Order(biNode * root)
 
 }
 /*
-	Get_Tree_Hight:求二叉树的高度
+	Get_Tree_Height:求二叉树的高度
 	@root:二叉树的根节点
 	返回值:
 		树的高度
 */
-int Get_Tree_Hight(biNode * root)
+int Get_Tree_Height(biNode * root)
 {
 	if(root == NULL)
 	{
 		return 0;
 	}
-	int leftHight = Get_Tree_Hight(root->lchild);
-	int rightHight = Get_Tree_Hight(root->rchild);
+	int leftHight = Get_Tree_Height(root->lchild);
+	int rightHight = Get_Tree_Height(root->rchild);
 
 	return (leftHight > rightHight ? leftHight : rightHight ) + 1;
 	
@@ -284,7 +285,7 @@ Delete_PX:
 		}
 		//转出来之后就是找到了
 		p->data = px->data;
-		px->data = x;
+		//px->data = x;
 		printf("%d\n",__LINE__);
 		goto Delete_PX;
 
@@ -349,4 +350,460 @@ Delete_PX:
 	
 }
 
+/*
+	Levle_Order:层次遍历
+*/
+void Levle_Order(biNode * root)
+{
+	if(root == NULL)
+	{
+		return ;
+	}
+	//初始化一个队列
+	SqQueue * q = InitQueue();
+	//将根节点的指针入队
+	EnQueue(q, root);
 
+	while(!QueueIsEmpty(q))
+	{
+		QElemType d;
+		DeQueue(q,&d);
+		printf("%c ",d->data);
+		//然后再看要出队的结点是否有左右孩子
+		if(d->lchild)
+		{
+			EnQueue(q, d->lchild);
+		}
+		if(d->rchild)
+		{
+			EnQueue( q, d->rchild);
+		}
+	}
+	DestoryQueue(q);
+}
+
+/*
+	Pre_Stack_Order: 用栈的方式,实现先序遍历
+	@root:根节点的指针
+*/
+void Pre_Stack_Order(biNode * root)
+{
+	if(root == NULL)
+	{
+		return ;
+	}
+	//初始化一个栈
+	LStack * s = InitStack();
+	//将根节点的指针入栈
+	printf("%c ",root->data);
+	Push(s, root);
+	
+	//判断栈是否为空
+	while( !StackIsEmpty(s))
+	{
+        // 先处理左子树
+        while ( root->lchild != NULL)
+        {
+            root = root->lchild;
+            Push(s, root);  // 将左子节点入栈
+            printf("%c ", root->data);  // 打印左子节点数据
+        }
+        
+        // 处理右子树
+		while(!StackIsEmpty(s))
+        {    Pop(s, &root);
+            if (root->rchild != NULL)
+            {
+                root = root->rchild; 
+                Push(s, root);  // 将右子节点入栈
+                printf("%c ", root->data);  // 打印右子节点数据
+				break;
+            }
+		}
+	}
+	
+}
+
+/*
+	mid_Stack_Order:使用非递归的方法实现，中序遍历(栈)
+   	约定任何元素出栈栈的时候先打印
+   	@root:根节点的指针
+*/
+void mid_Stack_Order(biNode * root)
+{
+	if(root == NULL)
+	{
+		return ;
+	}
+
+	//初始化一个栈
+	LStack* s = InitStack();
+	// 遍历过程
+    while (root != NULL || !StackIsEmpty(s))
+    {
+        // 处理左子树，将所有左子节点压入栈
+        while (root != NULL)
+        {
+            Push(s, root);
+            root = root->lchild;
+        }
+        
+        // 栈顶元素出栈并打印
+        if (!StackIsEmpty(s))
+        {
+            Pop(s, &root);
+            printf("%c ", root->data);  // 打印节点数据
+            
+            // 处理右子树
+            root = root->rchild;
+        }
+    }
+
+}
+/*
+void Pre_Order_Fei(biNode * root)
+{
+	if(root == NULL)
+	{
+		return ;
+	}
+
+	//初始化一个栈
+	LStack * s =  InitStack();
+
+	biNode * p = root;
+	while(p || !StackIsEmpty(s))
+	{
+		while(p)
+		{
+			printf("%c ",p->data);
+			//改数据的类型biNode*
+			Push(s, p);
+			p = p->lchild;
+		}
+
+		if(!StackIsEmpty(s))
+		{
+			Pop(s, &p);
+			p = p->rchild;
+		}
+
+	}
+	printf("\n");
+	DestroyStack(s);
+}
+
+void Mid_Order_Fei(biNode * root)
+{
+	if(root == NULL)
+	{
+		return ;
+	}
+
+	//初始化一个栈
+	LStack * s =  InitStack();
+
+	biNode * p = root;
+	while(p || !StackIsEmpty(s))
+	{
+		while(p)
+		{
+
+			//改数据的类型biNode*
+			Push(s, p);
+			p = p->lchild;
+		}
+
+		if(!StackIsEmpty(s))
+		{
+			Pop(s, &p);
+			printf("%c ",p->data);
+			p = p->rchild;
+		}
+
+	}
+	printf("\n");
+	DestroyStack(s);
+}
+
+void Back_Order_Fei(biNode * root)
+{
+
+	if(root == NULL)
+	{
+		return ;
+	}
+	LStack * s1 = InitStack();
+	LStack * s2 = InitStack();
+	
+	//先让根节点的指针Push => s1
+	biNode * p =root;
+	Push(s1,p);
+	while(!StackIsEmpty(s1))
+	{
+		Pop(s1,&p);
+		//将s1的栈顶元素,加入到s2中去
+		Push(s2, p);
+
+		//依次将s1的栈顶元素的左孩子和右孩子,分别Push到s1
+		if(p->lchild)
+		{
+			Push(s1,p->lchild);
+		}
+		if(p->rchild)
+		{
+			Push(s1,p->rchild);
+		}
+	}
+	while(!StackIsEmpty(s2))
+	{
+		Pop(s2, &p);
+		printf("%c ",p->data);
+	}
+	printf("\n");
+	DestroyStack(s1);
+	DestroyStack(s1);
+}
+*/
+void Pre_Order_Feidigui(biNode * root)
+{
+	if(root == NULL)
+	{
+		return ;
+	}
+
+	//初始化一个栈
+	LStack * s =InitStack();
+	//初始化一个指向根节点的指针
+	biNode * p = root;
+	while(p || !StackIsEmpty(s))
+	{
+		while(p)
+		{
+			printf("%c ",p->data);
+			Push(s, p);
+			p = p->lchild;
+		}
+
+		if(!StackIsEmpty(s))
+		{
+			Pop(s, &p);
+			p = p->rchild;
+		}
+	}
+	printf("\n");
+	DestroyStack(s);
+	
+}
+void Mid_Order_Feidigui(biNode * root)
+{
+	if(root == NULL)
+	{
+		return ;
+	}
+
+	//初始化一个栈
+	LStack * s =InitStack();
+	//初始化一个指向根节点的指针
+	biNode * p = root;
+	while(p || !StackIsEmpty(s))
+	{
+		while(p)
+		{
+
+			Push(s, p);
+			p = p->lchild;
+		}
+
+		if(!StackIsEmpty(s))
+		{
+			Pop(s, &p);
+			printf("%c ",p->data);
+			p = p->rchild;
+		}
+	}
+	printf("\n");
+	DestroyStack(s);
+	
+}
+
+void Last_Order_Feidigui(biNode * root)
+{
+	if(root == NULL)
+	{
+		return ;
+	}
+	//初始化两个栈
+	LStack * s1 = InitStack();
+	LStack * s2 = InitStack();
+
+	//定义一个指向根结点的指针
+	biNode * p = root;
+	Push(s1, p);
+	while(!StackIsEmpty(s1))
+	{
+		Pop(s1, &p);
+		Push(s2, p);
+		if(p->lchild)
+		{
+			Push(s1, p->lchild);
+		}
+		if(p->rchild)
+		{
+			Push(s1, p->rchild);
+		}
+
+	}
+	while(!StackIsEmpty(s2))
+	{
+		Pop(s2, &p);
+		printf("%c ",p->data);
+	}
+	printf("\n");
+	DestroyStack(s1);
+	DestroyStack(s2);
+}
+
+/*
+	Is_wanquanTree:判断一棵树是否为完全二叉树
+	@root：二叉树的根结点的指针
+	返回值:
+		1 完全二叉树
+		0 非完成二叉树
+		-1 空树
+*/
+
+
+/*
+	Is_WanquanTree : 判断一棵二叉树是否为完全二叉树
+	@root:二叉树的根结点的指针
+	返回值:
+		1 是完全二叉树
+		0 非完全二叉树
+	   -1 二叉树不存在
+*/
+int Is_WanquanTree(biNode *root)
+{
+	if(root == NULL)
+	{
+		
+		return -1;//二叉树不存在
+	}
+
+	//初始化一个队列
+	SqQueue * q = InitQueue();
+
+	//将根结点入队
+	biNode * p = root;
+	EnQueue(q, p);
+
+	//定义一个标记
+	int flag = 0 ; //0 没有找到第一个非满结点
+				   //1 找到了第一个非满结点
+	while(!QueueIsEmpty(q))
+	{
+		//出队
+		DeQueue(q, &p);
+
+		//进入if那就说明是第一个非满结点了
+		if(flag)
+		{
+			//判断p是否为叶子结点
+			if(p->lchild  || p->rchild)
+			{
+				//不是叶子结点
+				DestoryQueue(q);
+				return 0;//非完全二叉树
+			}
+			
+		}
+		else
+		{
+			//判断p是不是第一个非满结点
+			if(p->lchild==NULL  || p->rchild==NULL)
+			{
+				flag = 1;
+				if(p->rchild)
+				{
+					DestoryQueue(q);
+					return 0;//非完全二叉树
+				}
+			}
+		}
+		//将出队元素左孩子入队
+		if(p->lchild)
+		{
+			EnQueue(q, p->lchild);
+		}
+		//将出队元素右孩子入队
+		if(p->rchild)
+		{
+			EnQueue(q, p->rchild);
+		}
+
+
+	}
+	//销毁队列
+	DestoryQueue(q);
+	return 1;//完全二叉树
+
+}
+
+
+/*
+int Is_WanquanTree(biNode *root)
+{
+	if(root == NULL)
+	{
+		printf("此二叉树不存在!\n");
+		return -1;
+	}
+
+	int flag = 0;	
+	//初始化一个队列
+	SqQueue * q = InitQueue();
+
+	//将根结点的指针入队
+	biNode * p =root;
+	EnQueue(q, p);
+	while(!QueueIsEmpty(q))
+	{
+		//出队给p
+		DeQueue(q, &p);
+		if(flag)
+		{
+			//判断是否为叶子结点
+			if(p->rchild || p->lchild)
+			{
+				//不是叶子结点则直接退出
+				return 0;//非完全二叉树
+			}
+			
+		}
+		else
+		{
+			//判断p是不是第一个非满结点
+			if(p->lchild == NULL || p->rchild == NULL)
+			{
+				flag = 1;
+				if(p->rchild)
+				{
+					return 0;
+				}
+			}
+		}
+
+		if(p->lchild)
+		{
+			EnQueue( q, p->lchild);
+		}
+		if(p->rchild)
+		{
+			EnQueue(q, p->rchild);
+
+		}
+	}
+	DestoryQueue(q);
+	return 1;
+}
+*/
